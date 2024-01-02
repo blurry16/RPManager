@@ -26,6 +26,7 @@ def follow(thefile):
 
 
 if __name__ == "__main__":
+    admins = json.load(open("cfg.json"))["cfg"]["admins"]
     while True:
         logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
         logLines = follow(logfile)
@@ -130,7 +131,7 @@ if __name__ == "__main__":
                     elif "#addmoney".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        if username == "blurry16" or username == "ItzMeFred":
+                        if username in admins:
                             args = line.replace("\n", "").split("#addmoney ", 1)[1].split()
                             nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
                             amount = args[1]
@@ -151,7 +152,7 @@ if __name__ == "__main__":
                     elif "#removemoney".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        if username == "blurry16" or username == "ItzMeFred":
+                        if username in admins:
                             args = line.replace("\n", "").split("#removemoney ", 1)[1].split()
                             nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
                             amount = args[1]
@@ -163,24 +164,6 @@ if __name__ == "__main__":
                                 money_data[nameToRemove] -= int(amount)
                                 mcprint(
                                     f"{amount} magmas were successfully removed from {nameToRemove}'s wallet.")
-                            money.seek(0)
-                            json.dump(money_data, money, indent=2)
-                        else:
-                            mcprint("No permissions.")
-                    elif "#setmoney".lower() in line:
-                        print(line)
-                        username = line.split()[4].split("<")[1].split(">")[0]
-                        if username == "blurry16" or username == "ItzMeFred":
-                            args = line.replace("\n", "").split("#setmoney ", 1)[1].split()
-                            nameToSet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            amount = args[1]
-                            money = open("money.json", "r+")
-                            money_data = json.load(money)
-                            if nameToSet not in money_data:
-                                mcprint(f"{nameToSet} hasn't registered yet.")
-                            else:
-                                money_data[nameToSet] = int(amount)
-                                mcprint(f"{amount} magmas were successfully set for {nameToSet}.")
                             money.seek(0)
                             json.dump(money_data, money, indent=2)
                         else:
