@@ -37,8 +37,8 @@ if __name__ == "__main__":
                     if "#register".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        money = open("money.json", "r+")
-                        names = open("names.json", "r+")
+                        money = open("money.json", "r")
+                        names = open("names.json", "r")
                         money_data = json.load(money)
                         names_data = json.load(names)
                         if username not in money_data and username not in names_data:
@@ -48,6 +48,8 @@ if __name__ == "__main__":
                             mcprint("Thanks for registering with RoleBOT2!")
                         else:
                             mcprint("You have already registered with RoleBOT2.")
+                        money = open("money.json", "w")
+                        names = open("names.json", "w")
                         money.seek(0)
                         names.seek(0)
                         json.dump(money_data, money, indent=2)
@@ -55,12 +57,13 @@ if __name__ == "__main__":
                     elif "#balance".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        money = open("money.json", "r+")
+                        money = open("money.json", "r")
                         money_data = json.load(money)
                         if username not in money_data:
                             mcprint("You haven't registered yet.")
                         else:
                             mcprint(f"Your balance is {str(money_data[username])} magmas.")
+                        money.seek(0)
                     elif "#pay".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
@@ -69,8 +72,8 @@ if __name__ == "__main__":
                         if username == userToPay:
                             mcprint("You can't pay yourself : )")
                         else:
-                            amount = args[1]
-                            money = open("money.json", "r+")
+                            amount = int(args[1])
+                            money = open("money.json", "r")
                             money_data = json.load(money)
                             if username not in money_data:
                                 mcprint("You haven't registered yet.")
@@ -78,12 +81,15 @@ if __name__ == "__main__":
                                 if userToPay not in money_data:
                                     mcprint(f"{userToPay} hasn't registered yet.")
                                 else:
-                                    if money_data[username] >= int(amount):
-                                        money_data[username] -= int(amount)
-                                        money_data[userToPay] += int(amount)
+                                    if money_data[username] >= amount > 0:
+                                        money_data[username] -= amount
+                                        money_data[userToPay] += amount
                                         mcprint(f"{username} successfully paid {userToPay} {str(amount)} magmas.")
+                                    elif amount <= 0:
+                                        mcprint("Wrong amount. amount <= 0!")
                                     else:
                                         mcprint("You don't have enough money.")
+                            money = open("money.json", "w")
                             money.seek(0)
                             json.dump(money_data, money, indent=2)
                     elif "#setname".lower() in line:
@@ -91,22 +97,23 @@ if __name__ == "__main__":
                         username = line.split()[4].split("<")[1].split(">")[0]
                         args = line.replace("\n", "").split("#setname ", 1)[1].split()
                         newName = args[0]
-                        names = open("names.json", "r+")
+                        names = open("names.json", "r")
                         names_data = json.load(names)
                         if username not in names_data:
                             mcprint("You haven't registered yet.")
                         else:
                             names_data[username] = newName
-                            names.seek(0)
-                            json.dump(names_data, names, indent=2)
-                            mcprint(f"Set Roleplay Name to {newName}")
+                            mcprint(f"Set Roleplay name to {newName} for {username}.")
+                        names = open("names.json", "w")
+                        names.seek(0)
+                        json.dump(names_data, names, indent=2)
 
                     elif "#getname".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
                         args = line.replace("\n", "").split("#getname ", 1)[1].split()
                         nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                        names = open("names.json", "r+")
+                        names = open("names.json", "r")
                         names_data = json.load(names)
                         if nameToGet not in names_data:
                             mcprint(f"{nameToGet} has not registered yet.")
@@ -114,19 +121,48 @@ if __name__ == "__main__":
                             if names_data[nameToGet] == "Unset":
                                 mcprint(f"{nameToGet} hasn't set their name yet.")
                             else:
-                                mcprint(f"{nameToGet}'s Roleplay Name is '{names_data[nameToGet]}'.")
+                                mcprint(f"{nameToGet}'s Roleplay name is '{names_data[nameToGet]}'.")
+                        names.seek(0)
+                    elif "#resetname".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        names = open("names.json", "r")
+                        names_data = json.load(names)
+                        if username not in names_data:
+                            mcprint("You haven't registered yet.")
+                        else:
+                            names_data[username] = "Unset"
+                            mcprint(f"Successfully reset Roleplay name for {username}.")
+                        names = open("names.json", "w")
+                        names.seek(0)
+                        json.dump(names_data, names, indent=2)
+
+                    elif "#myname".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        names = open("names.json", "r")
+                        names_data = json.load(names)
+                        if username not in names_data:
+                            mcprint("You haven't registered yet.")
+                        else:
+                            if names_data[username] != "Unset":
+                                mcprint(f"Your Roleplay name is {names_data[username]}.")
+                            else:
+                                mcprint(f"You haven't set your Roleplay name yet.")
+                        names.seek(0)
 
                     elif "#getmoney".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
                         args = line.replace("\n", "").split("#getmoney ", 1)[1].split()
                         nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                        money = open("money.json", "r+")
+                        money = open("money.json", "r")
                         money_data = json.load(money)
                         if nameToGet not in money_data:
                             mcprint(f"{nameToGet} hasn't registered yet.")
                         else:
                             mcprint(f"{nameToGet} has {money_data[nameToGet]} magmas.")
+                        money.seek(0)
 
                     elif "#addmoney".lower() in line:
                         print(line)
@@ -134,17 +170,18 @@ if __name__ == "__main__":
                         if username in admins:
                             args = line.replace("\n", "").split("#addmoney ", 1)[1].split()
                             nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            amount = args[1]
-                            money = open("money.json", "r+")
+                            amount = int(args[1])
+                            money = open("money.json", "r")
                             money_data = json.load(money)
                             if nameToAdd not in money_data:
                                 mcprint(f"{nameToAdd} hasn't registered yet.")
                             else:
-                                if int(amount) > 0:
-                                    money_data[nameToAdd] += int(amount)
-                                    mcprint(f"{amount} magmas were successfully added to {nameToAdd}")
+                                if amount > 0:
+                                    money_data[nameToAdd] += amount
+                                    mcprint(f"{amount} magmas were successfully added to {nameToAdd}'s wallet.")
                                 else:
                                     mcprint(f"Wrong value!")
+                            money = open("money.json", "w")
                             money.seek(0)
                             json.dump(money_data, money, indent=2)
                         else:
@@ -155,20 +192,49 @@ if __name__ == "__main__":
                         if username in admins:
                             args = line.replace("\n", "").split("#removemoney ", 1)[1].split()
                             nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            amount = args[1]
-                            money = open("money.json", "r+")
+                            amount = int(args[1])
+                            money = open("money.json", "r")
                             money_data = json.load(money)
                             if nameToRemove not in money_data:
                                 mcprint(f"{nameToRemove} hasn't registered yet.")
                             else:
-                                money_data[nameToRemove] -= int(amount)
-                                mcprint(
-                                    f"{amount} magmas were successfully removed from {nameToRemove}'s wallet.")
+                                if amount > 0:
+                                    money_data[nameToRemove] -= amount
+                                    mcprint(f"{amount} magmas were successfully removed from {nameToRemove}'s wallet.")
+                                else:
+                                    mcprint("Wrong amount! amount <= 0!")
+                            money = open("money.json", "w")
                             money.seek(0)
                             json.dump(money_data, money, indent=2)
                         else:
                             mcprint("No permissions.")
+                    elif "#addmember".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        if username in admins:
+                            args = line.replace("\n", "").split("#addmember ", 1)[1].split()
+                            nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
+                            mcprint(f"/rg addmember blurry16 {nameToAdd}")
+                            mcprint(f"Successfully added {nameToAdd}.")
+                        else:
+                            mcprint("No permissions.")
+                    elif "#removemember" in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        if username in admins:
+                            args = line.replace("\n", "").split("#removemember ", 1)[1].split()
+                            nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
+                            if nameToRemove in admins:
+                                mcprint("You can't remove other admins.")
+                            elif nameToRemove == username:
+                                mcprint("You can't remove yourself.")
+                            else:
+                                mcprint(f"/rg removemember blurry16 {nameToRemove}")
+                                mcprint(f"Successfully removed {nameToRemove}.")
+                        else:
+                            mcprint("No permissions.")
                     elif "#github".lower() in line:
+                        print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
                         mcprint("github.com/blurry16/")
                 except Exception as ex:
