@@ -218,7 +218,7 @@ if __name__ == "__main__":
                             mcprint(f"Successfully added {nameToAdd}.")
                         else:
                             mcprint("No permissions.")
-                    elif "#removemember" in line:
+                    elif "#removemember".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
                         if username in admins:
