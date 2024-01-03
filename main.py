@@ -1,7 +1,7 @@
 import time
 import keyboard
 import json
-from mojang import API
+from mojang import API, errors
 mojang_api = API()
 
 
@@ -30,11 +30,11 @@ if __name__ == "__main__":
     admins = cfg["cfg"]["admins"]
     region_name = cfg["cfg"]["region-name"]
     while True:
-        logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
+        # logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
+        logfile = open(cfg["cfg"]["log-file"], "r")
         logLines = follow(logfile)
         for line in logLines:
-            if "[Render thread/INFO]: [CHAT]" in line and "<" in line and ">" in line:
-
+            if "[CHAT]" in line and "<" in line and ">" in line:
                 try:
                     if "#register".lower() in line:
                         print(line)
@@ -66,6 +66,20 @@ if __name__ == "__main__":
                         else:
                             mcprint(f"Your balance is {str(money_data[username])} magmas.")
                         money.seek(0)
+
+                    elif "#getmoney".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        args = line.replace("\n", "").split("#getmoney ", 1)[1].split()
+                        nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
+                        money = open("money.json", "r")
+                        money_data = json.load(money)
+                        if nameToGet not in money_data:
+                            mcprint(f"{nameToGet} hasn't registered yet.")
+                        else:
+                            mcprint(f"{nameToGet} has {money_data[nameToGet]} magmas.")
+                        money.seek(0)
+
                     elif "#pay".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
@@ -153,19 +167,6 @@ if __name__ == "__main__":
                                 mcprint(f"You haven't set your Roleplay name yet.")
                         names.seek(0)
 
-                    elif "#getmoney".lower() in line:
-                        print(line)
-                        username = line.split()[4].split("<")[1].split(">")[0]
-                        args = line.replace("\n", "").split("#getmoney ", 1)[1].split()
-                        nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                        money = open("money.json", "r")
-                        money_data = json.load(money)
-                        if nameToGet not in money_data:
-                            mcprint(f"{nameToGet} hasn't registered yet.")
-                        else:
-                            mcprint(f"{nameToGet} has {money_data[nameToGet]} magmas.")
-                        money.seek(0)
-
                     elif "#addmoney".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
@@ -210,6 +211,42 @@ if __name__ == "__main__":
                             json.dump(money_data, money, indent=2)
                         else:
                             mcprint("No permissions.")
+                    elif "#setmoney".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        if username in admins:
+                            args = line.replace("\n", "").split("#setmoney ", 1)[1].split()
+                            nameToSet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
+                            amount = int(args[1])
+                            money = open("money.json", "r")
+                            money_data = json.load(money)
+                            if nameToSet not in money_data:
+                                mcprint(f"{nameToSet} hasn't registered yet.")
+                            else:
+                                money_data[nameToSet] = amount
+                                mcprint(f"{amount} magmas were successfully set for {nameToSet}'s wallet.")
+                            money = open("money.json", "w")
+                            money.seek(0)
+                            json.dump(money_data, money, indent=2)
+                        else:
+                            mcprint("No permissions.")
+                    elif "#resetmoney".lower() in line:
+                        print(line)
+                        username = line.split()[4].split("<")[1].split(">")[0]
+                        if username in admins:
+                            args = line.replace("\n", "").split("#resetmoney ", 1)[1].split()
+                            nameToReset = mojang_api.get_username(mojang_api.get_uuid(args[0]))
+                            money = open("money.json", "r")
+                            money_data = json.load(money)
+                            if nameToReset not in money_data:
+                                mcprint(f"{nameToReset} hasn't registered yet.")
+                            else:
+                                money_data[nameToReset] = 500
+                                mcprint(f"{nameToReset}'s wallet was successfully reset.")
+                            money = open("money.json", "w")
+                            money.seek(0)
+                            json.dump(money_data, money, indent=2)
+
                     elif "#addmember".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
@@ -238,6 +275,12 @@ if __name__ == "__main__":
                     elif "#github".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        mcprint("github.com/blurry16/")
+                        mcprint("github.com/blurry16/ <3")
+                except ValueError:
+                    mcprint("Wrong value (Probably not integer).")
+                except errors.NotFound:
+                    mcprint("This account doesn't exist.")
+                except IndexError:
+                    mcprint("Not enough arguments.")
                 except Exception as ex:
                     print(f"Error \"{ex}\" occurred.")

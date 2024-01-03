@@ -1,11 +1,12 @@
 {
   "cfg": {
     "name": "rpmanager2",
-    "version": "3-1-2023/2",
+    "version": "4-1-2023/1",
     "admins": [
       "blurry16",
       "ItzMeFred"
     ],
-    "region-name": "blurry16"
+    "region-name": "blurry16",
+    "log-file": "C:\\MultiMC\\instances\\1.20.2 copy 1\\.minecraft\\logs\\latest.log"
   }
 }
