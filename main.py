@@ -26,7 +26,9 @@ def follow(thefile):
 
 
 if __name__ == "__main__":
-    admins = json.load(open("cfg.json"))["cfg"]["admins"]
+    cfg = json.load(open("cfg.json"))
+    admins = cfg["cfg"]["admins"]
+    region_name = cfg["cfg"]["region-name"]
     while True:
         logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
         logLines = follow(logfile)
@@ -214,7 +216,7 @@ if __name__ == "__main__":
                         if username in admins:
                             args = line.replace("\n", "").split("#addmember ", 1)[1].split()
                             nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            mcprint(f"/rg addmember blurry16 {nameToAdd}")
+                            mcprint(f"/rg addmember {region_name} {nameToAdd}")
                             mcprint(f"Successfully added {nameToAdd}.")
                         else:
                             mcprint("No permissions.")
@@ -229,7 +231,7 @@ if __name__ == "__main__":
                             elif nameToRemove == username:
                                 mcprint("You can't remove yourself.")
                             else:
-                                mcprint(f"/rg removemember blurry16 {nameToRemove}")
+                                mcprint(f"/rg removemember {region_name} {nameToRemove}")
                                 mcprint(f"Successfully removed {nameToRemove}.")
                         else:
                             mcprint("No permissions.")
