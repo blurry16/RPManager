@@ -26,12 +26,12 @@ def follow(thefile):
 
 
 if __name__ == "__main__":
-    cfg = json.load(open("cfg.json"))
-    admins = cfg["cfg"]["admins"]
-    region_name = cfg["cfg"]["region-name"]
+    cfg = json.load(open("cfg.json"))["cfg"]
+    admins = cfg["admins"]
+    region_name = cfg["region-name"]
     while True:
         # logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
-        logfile = open(cfg["cfg"]["log-file"], "r")
+        logfile = open(cfg["log-file"], "r")
         logLines = follow(logfile)
         for line in logLines:
             if "[CHAT]" in line and "<" in line and ">" in line:
@@ -246,7 +246,8 @@ if __name__ == "__main__":
                             money = open("money.json", "w")
                             money.seek(0)
                             json.dump(money_data, money, indent=2)
-
+                        else:
+                            mcprint("No permissions.")
                     elif "#addmember".lower() in line:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
