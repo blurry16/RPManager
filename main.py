@@ -99,7 +99,7 @@ if __name__ == "__main__":
                                 if userToPay not in money_data:
                                     mcprint(f"{userToPay} hasn't registered yet.")
                                 else:
-                                    if money_data[username] >= amount > 1:
+                                    if money_data[username] >= amount >= 1:
                                         money_data[username] -= amount
                                         money_data[userToPay] += amount
                                         mcprint(f"{username} successfully paid {userToPay} {str(amount)} magmas.")
@@ -289,7 +289,7 @@ if __name__ == "__main__":
                         username = line.split()[4].split("<")[1].split(">")[0]
                         mcprint("github.com/blurry16/ <3")
                 except ValueError:
-                    mcprint("Wrong value (Probably not integer).")
+                    mcprint("Wrong value.")
                 except errors.NotFound:
                     mcprint("This account doesn't exist.")
                 except IndexError:
