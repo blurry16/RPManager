@@ -309,6 +309,7 @@ if __name__ == "__main__":
                             else:
                                 mcprint(f"Job '{job_naming}' already exist.")
                             available_jobs = open("available_jobs.json", "w")
+                            available_jobs.seek(0)
                             json.dump(available_jobs_data, available_jobs, indent=2)
                         else:
                             mcprint("No permissions.")
