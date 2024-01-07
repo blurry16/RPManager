@@ -1,7 +1,7 @@
 {
   "info":{
     "name": "rpmanager2",
-    "version": "5-1-2024/1"
+    "version": "7-1-2024/1"
   },
   "cfg": {
     "admins": [
@@ -9,6 +9,7 @@
       "ItzMeFred"
     ],
     "region-name": "blurry16",
-    "log-file": "C:\\MultiMC\\instances\\1.20.2 copy 1\\.minecraft\\logs\\latest.log"
+    "log-file": "C:\\MultiMC\\instances\\1.20.2 copy 1\\.minecraft\\logs\\latest.log",
+    "host": "blurry16"
   }
 }
