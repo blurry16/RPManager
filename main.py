@@ -44,7 +44,6 @@ if __name__ == "__main__":
         available_jobs.seek(0)
 
     while True:
-        # logfile = open(r"C:\Users\Blurry\AppData\Roaming\.minecraft\logs\latest.log", "r")
         logfile = open(cfg["log-file"], "r", encoding="utf-8")
         logLines = follow(logfile)
         for line in logLines:
@@ -53,7 +52,6 @@ if __name__ == "__main__":
                     if "#register" == line.lower().split()[5]:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-
                         if username not in money_data and username not in names_data and username not in players_jobs_data:
                             money_data[username] = 500.0
                             names_data[username] = ""
@@ -150,9 +148,6 @@ if __name__ == "__main__":
                     elif "#myname" == line.lower().split()[5]:
                         print(line)
                         username = line.split()[4].split("<")[1].split(">")[0]
-                        # with open("names.json", "r") as names:
-                        #     names_data = json.load(names)
-                        #     names.seek(0)
                         if username not in names_data:
                             mcprint("You haven't registered yet.")
                         else:
@@ -169,9 +164,6 @@ if __name__ == "__main__":
                             args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
                             nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
                             amount = float(args[1])
-                            # with open("money.json", "r", encoding="utf-8") as money:
-                            #     money_data = json.load(money)
-                            #     money.seek(0)
                             if nameToAdd not in money_data:
                                 mcprint(f"{nameToAdd} hasn't registered yet.")
                             else:
@@ -180,9 +172,6 @@ if __name__ == "__main__":
                                     mcprint(f"{amount} magmas were successfully added to {nameToAdd}'s wallet.")
                                 else:
                                     mcprint(f"Wrong value!")
-                            # with open("money.json", "w", encoding="utf-8") as money:
-                            #     money.seek(0)
-                            #     json.dump(money_data, money, indent=4)
                         else:
                             mcprint("No permissions.")
                     elif "#removemoney" == line.lower().split()[5]:
@@ -193,9 +182,6 @@ if __name__ == "__main__":
                             args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
                             nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
                             amount = float(args[1])
-                            # with open("money.json", "r") as money:
-                            #     money.seek(0)
-                            #     money_data = json.load(money)
                             if nameToRemove not in money_data:
                                 mcprint(f"{nameToRemove} hasn't registered yet.")
                             else:
@@ -204,9 +190,6 @@ if __name__ == "__main__":
                                     mcprint(f"{amount} magmas were successfully removed from {nameToRemove}'s wallet.")
                                 else:
                                     mcprint("Wrong amount! amount <= 0!")
-                            # with open("money.json", "w", encoding="utf-8") as money:
-                            #     money.seek(0)
-                            #     json.dump(money_data, money, indent=4)
                         else:
                             mcprint("No permissions.")
                     elif "#setmoney" == line.lower().split()[5]:
