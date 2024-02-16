@@ -6,7 +6,7 @@
 - **keyboard library** _(pip install keyboard)_
 - **mojang library** _(pip install mojang)_
 
-## Some useless answers on not given questions
+## _Some useless answers on not given questions_
 ### What is rpmanager2?
 
 rpmanager2 is an updated version of rp-manager by AllergenStudios, who deleted the original one.
