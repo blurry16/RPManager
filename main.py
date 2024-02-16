@@ -352,7 +352,7 @@ if __name__ == "__main__":
                         case "#save":
                             print(line)
                             username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
+                            if username in admins or username == cfg["host"]:
                                 with (open("money.json", "w", encoding="utf-8") as money,
                                       open("names.json", "w", encoding="utf-8") as names,
                                       open("players_jobs.json", "w", encoding="utf-8") as players_jobs,
