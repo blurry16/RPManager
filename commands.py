@@ -73,8 +73,8 @@ def registercommand(line: str):
         data[uuid] = {
             "username": username,
             "balance": 500.0,
-            "in-bot-name": "",
-            "job": ""
+            "in-bot-name": None,
+            "job": None
         }
         datafile.dump(data)
         print(f"Added {username} as a valid player")
@@ -182,7 +182,7 @@ def getnamecommand(line: str):
 
     if toget not in data:
         return mcprint(f"{args[1]} has not registered yet.")
-    if data[toget]["in-bot-name"] == "":
+    if data[toget]["in-bot-name"] is None:
         return mcprint(f"{name} hasn't set their name yet.")
 
     mcprint(f"{name}'s Roleplay name is '{data[toget]['in-bot-name']}'.")
@@ -195,7 +195,7 @@ def resetnamecommand(line: str):
     data = datafile.load()
     if uuid not in data:
         return mcprint("You haven't registered yet.")
-    data[uuid]["in-bot-name"] = ""
+    data[uuid]["in-bot-name"] = None
     datafile.dump(data)
     mcprint(f"Successfully reset Roleplay name for {username}.")
 
@@ -206,7 +206,7 @@ def mynamecommand(line: str):
     data = datafile.load()
     if uuid not in data:
         return mcprint("You haven't registered yet.")
-    if data[uuid]["in-bot-name"] != "":
+    if data[uuid]["in-bot-name"] is not None:
         return mcprint(f"Your Roleplay name is '{data[uuid]['in-bot-name']}'.")
 
     mcprint(f"You haven't set your Roleplay name yet.")
@@ -306,7 +306,7 @@ def newjobcommand(line: str):
     print(line)
     username = getusername(line)
     if username not in admins:
-        mcprint("No permissions.")
+        return mcprint("No permissions.")
     args = rpgetargs(line)
     job_naming = args[1].lower()
     wage = float(args[2])
@@ -321,6 +321,23 @@ def newjobcommand(line: str):
     else:
         mcprint(f"Job '{job_naming}' already exist.")
 
+def deletejobcommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    job_naming = args[1].lower()
+    available_jobs_data = availablejobsfile.load()
+    if job_naming not in available_jobs_data:
+        return mcprint(f"Job '{job_naming}' does not exist.")
+    del availablejobsfile[job_naming]
+    availablejobsfile.dump(available_jobs_data)
+    data = datafile.load()
+    for uuid in data:
+        if data[uuid]["job"] == job_naming:
+            data[uuid]["job"] = None
+    datafile.dump(data)
 
 def setjobcommand(line: str):
     print(line)
@@ -356,10 +373,10 @@ def resetjobcommand(line: str):
     data = datafile.load()
     if toreset not in data:
         return mcprint(f"{toresetname} hasn't registered yet.")
-    if data[toreset]["job"] == "":
+    if data[toreset]["job"] is None:
         return mcprint(f"{toresetname} doesn't have a job.")
 
-    data[toreset]["job"] = ""
+    data[toreset]["job"] = None
     datafile.dump(data)
     mcprint(f"Job reset for {toresetname}.")
     print(f"Job reset for {toresetname}.")
@@ -373,7 +390,7 @@ def getjobcommand(line: str):
     data = datafile.load()
     if toget not in data:
         return mcprint(f"{togetname} hasn't registered yet.")
-    if data[toget]["job"] == "":
+    if data[toget]["job"] is None:
         return mcprint(f"{togetname} doesn't have a job.")
     mcprint(f"{togetname}'s job is '{data[toget]['job']}'.")
 
@@ -385,7 +402,7 @@ def myjobcommand(line: str):
     data = datafile.load()
     if uuid not in data:
         return mcprint("You haven't registered yet.")
-    if data[uuid]["job"] == "":
+    if data[uuid]["job"] is None:
         return mcprint("You don't have job.")
     mcprint(f"Your job is '{data[uuid]['job']}'.")
 
@@ -399,7 +416,7 @@ def payallcommand(line: str):
     available_jobs_data = availablejobsfile.load()
     for uuid in data:
         player_job = data[uuid]["job"]
-        if player_job != "":
+        if player_job is not None:
             data[uuid]["balance"] += available_jobs_data[player_job]
             print(f"Salary paid to {data[uuid]['username']}.")
     datafile.dump(data)
