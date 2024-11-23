@@ -25,7 +25,7 @@ if __name__ == "__main__":
     print(logo)
 
     while True:
-        logfile = open(config["log-file"], "r", encoding="utf-8")
+        logfile = open(paths["log"], "r", encoding="utf-8")
         logLines = follow(logfile)
         for line in logLines:
             if "[CHAT]" in line and "<" in line and ">" in line:
