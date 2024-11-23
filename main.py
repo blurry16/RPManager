@@ -1,398 +1,491 @@
-import time
-import keyboard
+# UUIDs.json stuff is stolen directly from a private fork of mcdatacollector xd
+# nobody cares though, I'm the author of that fork.
+# anyways im so dumb so i rewrote whole this thing lol. but! it should be stable rn :3
 import json
+import time
+from pathlib import Path
+from typing import TextIO, Generator
+
+import keyboard
 from mojang import API, errors
 
-mojang_api = API()
+logo = """ ___ .-.       .-..    ___ .-. .-.     .---.   ___ .-.     .---.    .--.     .--.    ___ .-.    
+(   )   \     /    \  (   )   '   \   / .-, \ (   )   \   / .-, \  /    \   /    \  (   )   \   
+ | ' .-. ;   ' .-,  ;  |  .-.  .-. ; (__) ; |  |  .-. .  (__) ; | ;  ,-. ' |  .-. ;  | ' .-. ;  
+ |  / (___)  | |  . |  | |  | |  | |   .'`  |  | |  | |    .'`  | | |  | | |  | | |  |  / (___) 
+ | |         | |  | |  | |  | |  | |  / .'| |  | |  | |   / .'| | | |  | | |  |/  |  | |        
+ | |         | |  | |  | |  | |  | | | /  | |  | |  | |  | /  | | | |  | | |  ' _.'  | |        
+ | |         | |  ' |  | |  | |  | | ; |  ; |  | |  | |  ; |  ; | | '  | | |  .'.-.  | |        
+ | |         | `-'  '  | |  | |  | | ' `-'  |  | |  | |  ' `-'  | '  `-' | '  `-' /  | |        
+(___)        | \__.'  (___)(___)(___)`.__.'_. (___)(___) `.__.'_.  `.__. |  `.__.'  (___)       
+             | |                                                   ( `-' ;                      
+            (___)                                                   `.__.  
+Welcome back!
+"""
 
 
 def mcprint(text):
-    keyboard.press("T")
-    time.sleep(0.001)
-    keyboard.release("T")
+    keyboard.press_and_release("t")
     time.sleep(0.1)
     keyboard.write(text, delay=0)
-    time.sleep(0.5)
+    time.sleep(0.01)
     keyboard.press_and_release("enter")
 
 
-def follow(thefile):
-    thefile.seek(0, 2)
+def follow(file: TextIO) -> Generator[str, None, None]:
+    file.seek(0, 2)
     while True:
-        li = thefile.readline()
+        li = file.readline()
         if not li:
             time.sleep(0.1)
             continue
         yield li
 
 
+getusername = lambda line: line.split()[4].split("<")[1][:-1]
+rpgetargs = lambda line: line.split("<" + getusername(line) + ">")[1].split()
+
+
+class Json:
+    def __init__(self, path: Path | str):
+        self.path = path
+
+    def load(self) -> list | dict:
+        with open(self.path, "r", encoding="UTF-8") as file:
+            return json.load(file)
+
+    def dump(self, data: list | dict) -> None:
+        with open(self.path, "w", encoding="UTF-8") as file:
+            json.dump(data, file, indent=2)
+
+
+mojang_api = API()
+
+CONFIG_PATH = Path("config.json")
+configfile = Json(CONFIG_PATH)
+config = configfile.load()
+paths = config["paths"]
+admins = config["admins"]
+region_name = config["region-name"]
+
+datafile = Json(paths["data"])
+uuidsfile = Json(paths["uuids"])
+availablejobsfile = Json(paths["available_jobs"])
+
+
+def getuuid(username: str) -> str:
+    uuids = uuidsfile.load()
+    if username.lower() not in uuids:
+        uuids[username.lower()] = mojang_api.get_uuid(username)
+        uuidsfile.dump(uuids)
+    return uuids[username.lower()]
+
+
+def registercommand(line: str):
+    print(line)
+    username = getusername(line)
+    uuid = getuuid(username)
+    data = datafile.load()
+    if uuid not in data:
+        data[uuid] = {
+            "username": username,
+            "balance": 500.0,
+            "in-bot-name": "",
+            "job": ""
+        }
+        datafile.dump(data)
+        print(f"Added {username} as a valid player")
+        mcprint(f"Thanks for registering, {username}!")
+    else:
+        mcprint("You have already registered with RoleBOT2.")
+
+
+def unregistercommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions!")
+
+    args = rpgetargs(line)
+    uuid = getuuid(args[1])
+    data = datafile.load()
+    if uuid not in data:
+        return mcprint(f"{args[1]} is not registered.")
+    del data[uuid]
+    datafile.dump(data)
+    mcprint(f"Successfully unregistered {args[1]}.")
+    print(f"Unregistered {args[1]}")
+
+
+def balancecommand(line: str):
+    print(line)
+    username = getusername(line)
+    uuid = getuuid(username)
+    data = datafile.load()
+
+    if uuid not in data:
+        mcprint("You haven't registered yet.")
+    else:
+        mcprint(f"Your balance is {data[uuid]['balance']}.")
+
+
+def getmoneycommand(line: str):
+    print(line)
+    args = rpgetargs(line)
+    toget = args[1]
+    uuid = getuuid(toget)
+    data = datafile.load()
+
+    if uuid not in data:
+        mcprint(f"{toget} hasn't registered yet.")
+    else:
+        mcprint(f"{toget} has {data[uuid]['balance']}.")
+
+
+def paycommand(line: str):
+    print(line)
+    username = getusername(line)
+    args = rpgetargs(line)
+    authoruuid = getuuid(username)
+    topayuuid = getuuid(mojang_api.get_username(args[1]))
+    data = datafile.load()
+    if authoruuid == topayuuid:
+        mcprint("You can't pay yourself : )")
+        return
+    amount = float(args[2])
+
+    if authoruuid not in data:
+        mcprint("You haven't registered yet.")
+        return
+
+    if topayuuid not in data:
+        mcprint(f"{args[1]} hasn't registered yet.")
+        return
+
+    if data[authoruuid]["balance"] >= amount >= 1:
+        data[authoruuid]["balance"] -= amount
+        data[topayuuid]["balance"] += amount
+
+        datafile.dump(data)
+        mcprint(f"{username} successfully paid {topayuuid['username']} {str(amount)}.")
+    elif amount < 1:
+        mcprint("Wrong amount. amount < 1!")
+    else:
+        mcprint("You don't have enough money.")
+
+
+def setnamecommand(line: str):
+    print(line)
+    username = getusername(line)
+    uuid = getuuid(username)
+    newname = rpgetargs(line)[1]
+    data = datafile.load()
+    if uuid not in data:
+        return mcprint("You haven't registered yet.")
+
+    data[uuid]["in-bot-name"] = newname
+    datafile.dump(data)
+    mcprint(f"Set Roleplay name to {newname} for {username}.")
+
+
+def getnamecommand(line: str):
+    print(line)
+
+    args = rpgetargs(line)
+    name = args[1]
+    toget = getuuid(name)
+
+    data = datafile.load()
+
+    if toget not in data:
+        return mcprint(f"{args[1]} has not registered yet.")
+    if data[toget]["in-bot-name"] == "":
+        return mcprint(f"{name} hasn't set their name yet.")
+
+    mcprint(f"{name}'s Roleplay name is '{data[toget]['in-bot-name']}'.")
+
+
+def resetnamecommand(line: str):
+    print(line)
+    username = getusername(line)
+    uuid = getuuid(username)
+    data = datafile.load()
+    if uuid not in data:
+        return mcprint("You haven't registered yet.")
+    data[uuid]["in-bot-name"] = ""
+    datafile.dump(data)
+    mcprint(f"Successfully reset Roleplay name for {username}.")
+
+
+def mynamecommand(line: str):
+    print(line)
+    uuid = getuuid(getusername(line))
+    data = datafile.load()
+    if uuid not in data:
+        return mcprint("You haven't registered yet.")
+    if data[uuid]["in-bot-name"] != "":
+        return mcprint(f"Your Roleplay name is '{data[uuid]['in-bot-name']}'.")
+
+    mcprint(f"You haven't set your Roleplay name yet.")
+
+
+def addmoneycommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    toaddname = args[1]
+    toadd = getuuid(toaddname)
+    amount = float(args[2])
+    data = datafile.load()
+    if toadd not in data:
+        return mcprint(f"{toadd} hasn't registered yet.")
+
+    if amount <= 0:
+        return mcprint(f"Wrong value!")
+    data[toadd]["balance"] += amount
+    datafile.dump(data)
+    mcprint(f"{amount} were successfully added to {toaddname}'s wallet.")
+
+
+def removemoneycommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+
+    args = rpgetargs(line)
+    toremovename = args[1]
+    toremove = getuuid(toremovename)
+    amount = float(args[2])
+    data = datafile.load()
+    if toremove not in data:
+        return mcprint(f"{toremovename} hasn't registered yet.")
+
+    if amount <= 0:
+        return mcprint("Wrong amount! amount <= 0!")
+    data[toremove]["balance"] -= amount
+    datafile.dump(data)
+    mcprint(f"{amount} were successfully removed from {toremovename}'s wallet.")
+
+
+def setmoneycommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    tosetname = args[1]
+    toset = getuuid(tosetname)
+    amount = float(args[2])
+    data = datafile.load()
+    if toset not in data:
+        return mcprint(f"{tosetname} hasn't registered yet.")
+
+    data[toset]["balance"] = amount
+    datafile.dump(data)
+    mcprint(f"{amount} were successfully set for {tosetname}'s wallet.")
+
+
+def resetmoneycommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    nametoreset = args[1]
+    toreset = getuuid(nametoreset)
+    data = datafile.load()
+    if toreset not in data:
+        return mcprint(f"{nametoreset} hasn't registered yet.")
+    data[toreset]["balance"] = 500.0
+    datafile.dump(data)
+    mcprint(f"{nametoreset}'s wallet was successfully reset.")
+
+
+def manageplot(line: str, add: bool):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    argument = args[1]
+    if add:
+        mcprint(f"/rg addmember {region_name} {argument}")
+        mcprint(f"Successfully added {argument}.")
+    else:
+        mcprint(f"/rg removemember {region_name} {argument}")
+        mcprint(f"Successfully added {argument}.")
+
+
+def newjobcommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        mcprint("No permissions.")
+    args = rpgetargs(line)
+    job_naming = args[1].lower()
+    wage = float(args[2])
+    available_jobs_data = availablejobsfile.load()
+    if job_naming not in available_jobs_data and wage >= 0:
+        available_jobs_data[job_naming] = wage
+        availablejobsfile.dump(available_jobs_data)
+        print(f"Added new job '{job_naming}' with {wage} wage.")
+        mcprint(f"Added '{job_naming}' job with {wage} wage.")
+    elif wage < 0:
+        mcprint("Wrong value. wage < 0")
+    else:
+        mcprint(f"Job '{job_naming}' already exist.")
+
+
+def setjobcommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    args = rpgetargs(line)
+    tosetname = args[1]
+    toset = getuuid(tosetname)
+    job_naming = args[2].lower()
+    available_jobs_data = availablejobsfile.load()
+    data = datafile.load()
+    if job_naming not in available_jobs_data:
+        return mcprint("This job doesn't exist.")
+
+    if toset not in data:
+        return mcprint(f"{tosetname} hasn't registered yet.")
+    data[toset]["job"] = job_naming
+    datafile.dump(data)
+    mcprint(f"Job '{job_naming}' set for {tosetname}")
+    print(f"Job '{job_naming}' set for {tosetname}")
+
+
+def resetjobcommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+
+    args = rpgetargs(line)
+    toresetname = args[1]
+    toreset = getuuid(toresetname)
+    data = datafile.load()
+    if toreset not in data:
+        return mcprint(f"{toresetname} hasn't registered yet.")
+    if data[toreset]["job"] == "":
+        return mcprint(f"{toresetname} doesn't have a job.")
+
+    data[toreset]["job"] = ""
+    datafile.dump(data)
+    mcprint(f"Job reset for {toresetname}.")
+    print(f"Job reset for {toresetname}.")
+
+def getjobcommand(line: str):
+    print(line)
+    args = rpgetargs(line)
+    togetname = args[1]
+    toget = getuuid(togetname)
+    data = datafile.load()
+    if toget not in data:
+        return mcprint(f"{togetname} hasn't registered yet.")
+    if data[toget]["job"] == "":
+        return mcprint(f"{togetname} doesn't have a job.")
+    mcprint(f"{togetname}'s job is '{data[toget]['job']}'.")
+
+def myjobcommand(line: str):
+    print(line)
+    username = getusername(line)
+    uuid = getuuid(username)
+    data = datafile.load()
+    if uuid not in data:
+        return mcprint("You haven't registered yet.")
+    if data[uuid]["job"] == "":
+        return mcprint("You don't have job.")
+    mcprint(f"Your job is '{data[uuid]['job']}'.")
+
+def payallcommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+    data = datafile.load()
+    available_jobs_data = availablejobsfile.load()
+    for uuid in data:
+        player_job = data[uuid]["job"]
+        if player_job != "":
+            data[uuid]["balance"] += available_jobs_data[player_job]
+            print(f"Salary paid to {data[uuid]['username']}.")
+    datafile.dump(data)
+    mcprint("Salary was successfully paid to all players.")
+    print("Salary was successfully paid to all players.")
+
 if __name__ == "__main__":
-    with (open("cfg.json", "r") as cfg_file,
-          open("money.json", "r", encoding="utf-8") as money,
-          open("names.json", "r", encoding="utf-8") as names,
-          open("players_jobs.json", "r", encoding="utf-8") as players_jobs,
-          open("available_jobs.json", "r", encoding="utf-8") as available_jobs):
-        cfg = json.load(cfg_file)["cfg"]
-        admins = cfg["admins"]
-        region_name = cfg["region-name"]
-        money_data = json.load(money)
-        names_data = json.load(names)
-        players_jobs_data = json.load(players_jobs)
-        available_jobs_data = json.load(available_jobs)
+    print(logo)
 
     while True:
-        logfile = open(cfg["log-file"], "r", encoding="utf-8")
+        logfile = open(config["log-file"], "r", encoding="utf-8")
         logLines = follow(logfile)
         for line in logLines:
             if "[CHAT]" in line and "<" in line and ">" in line:
+                line = line.strip()
                 try:
                     match line.lower().split()[5]:
                         case "#register":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if (username not in money_data
-                                    and username not in names_data
-                                    and username not in players_jobs_data):
-                                money_data[username] = 500.0
-                                names_data[username] = ""
-                                players_jobs_data[username] = ""
-                                print(f"Added {username} as a valid player")
-                                mcprint("Thanks for registering with RoleBOT2!")
-                            else:
-                                mcprint("You have already registered with RoleBOT2.")
-
+                            registercommand(line)
+                        case "#unregister":
+                            unregistercommand(line)
                         case "#balance":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-
-                            if username not in money_data:
-                                mcprint("You haven't registered yet.")
-                            else:
-                                mcprint(f"Your balance is {str(money_data[username])} magmas.")
+                            balancecommand(line)
                         case "#getmoney":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                            nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-
-                            if nameToGet not in money_data:
-                                mcprint(f"{nameToGet} hasn't registered yet.")
-                            else:
-                                mcprint(f"{nameToGet} has {money_data[nameToGet]} magmas.")
-
+                            getmoneycommand(line)
                         case "#pay":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                            userToPay = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            if username == userToPay:
-                                mcprint("You can't pay yourself : )")
-                            else:
-                                amount = float(args[1])
-
-                                if username not in money_data:
-                                    mcprint("You haven't registered yet.")
-                                else:
-                                    if userToPay not in money_data:
-                                        mcprint(f"{userToPay} hasn't registered yet.")
-                                    else:
-                                        if money_data[username] >= amount >= 1:
-                                            money_data[username] -= amount
-                                            money_data[userToPay] += amount
-                                            mcprint(f"{username} successfully paid {userToPay} {str(amount)} magmas.")
-                                        elif amount < 1:
-                                            mcprint("Wrong amount. amount < 1!")
-                                        else:
-                                            mcprint("You don't have enough money.")
-
+                            paycommand(line)
                         case "#setname":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                            newName = args[0]
-
-                            if username not in names_data:
-                                mcprint("You haven't registered yet.")
-                            else:
-                                names_data[username] = newName
-                                mcprint(f"Set Roleplay name to {newName} for {username}.")
-
+                            setnamecommand(line)
                         case "#getname":
-                            print(line)
-
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                            nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-
-                            if nameToGet not in names_data:
-                                mcprint(f"{nameToGet} has not registered yet.")
-                            else:
-                                if names_data[nameToGet] == "":
-                                    mcprint(f"{nameToGet} hasn't set their name yet.")
-                                else:
-                                    mcprint(f"{nameToGet}'s Roleplay name is '{names_data[nameToGet]}'.")
+                            getnamecommand(line)
                         case "#resetname":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-
-                            if username not in names_data:
-                                mcprint("You haven't registered yet.")
-                            else:
-                                names_data[username] = ""
-                                mcprint(f"Successfully reset Roleplay name for {username}.")
-
+                            resetnamecommand(line)
                         case "#myname":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username not in names_data:
-                                mcprint("You haven't registered yet.")
-                            else:
-                                if names_data[username] != "":
-                                    mcprint(f"Your Roleplay name is '{names_data[username]}'.")
-                                else:
-                                    mcprint(f"You haven't set your Roleplay name yet.")
-
+                            mynamecommand(line)
                         case "#addmoney":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                amount = float(args[1])
-                                if nameToAdd not in money_data:
-                                    mcprint(f"{nameToAdd} hasn't registered yet.")
-                                else:
-                                    if amount > 0:
-                                        money_data[nameToAdd] += amount
-                                        mcprint(f"{amount} magmas were successfully added to {nameToAdd}'s wallet.")
-                                    else:
-                                        mcprint(f"Wrong value!")
-                            else:
-                                mcprint("No permissions.")
+                            addmoneycommand(line)
                         case "#removemoney":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                amount = float(args[1])
-                                if nameToRemove not in money_data:
-                                    mcprint(f"{nameToRemove} hasn't registered yet.")
-                                else:
-                                    if amount > 0:
-                                        money_data[nameToRemove] -= amount
-                                        mcprint(
-                                            f"{amount} magmas were successfully removed from {nameToRemove}'s wallet.")
-                                    else:
-                                        mcprint("Wrong amount! amount <= 0!")
-                            else:
-                                mcprint("No permissions.")
+                            removemoneycommand(line)
                         case "#setmoney":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToSet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                amount = float(args[1])
-                                if nameToSet not in money_data:
-                                    mcprint(f"{nameToSet} hasn't registered yet.")
-                                else:
-                                    money_data[nameToSet] = amount
-                                    mcprint(f"{amount} magmas were successfully set for {nameToSet}'s wallet.")
-                            else:
-                                mcprint("No permissions.")
+                            setmoneycommand(line)
                         case "#resetmoney":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToReset = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-
-                                if nameToReset not in money_data:
-                                    mcprint(f"{nameToReset} hasn't registered yet.")
-                                else:
-                                    money_data[nameToReset] = 500.0
-                                    mcprint(f"{nameToReset}'s wallet was successfully reset.")
-
-                            else:
-                                mcprint("No permissions.")
+                            resetmoneycommand(line)
                         case "#addmember":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToAdd = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                mcprint(f"/rg addmember {region_name} {nameToAdd}")
-                                mcprint(f"Successfully added {nameToAdd}.")
-                            else:
-                                mcprint("No permissions.")
+                            if region_name != "":
+                                manageplot(line, True)
                         case "#removemember":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToRemove = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                if nameToRemove in admins:
-                                    mcprint("You can't remove other admins.")
-                                elif nameToRemove == username:
-                                    mcprint("You can't remove yourself.")
-                                else:
-                                    mcprint(f"/rg removemember {region_name} {nameToRemove}")
-                                    mcprint(f"Successfully removed {nameToRemove}.")
-                            else:
-                                mcprint("No permissions.")
+                            if region_name != "":
+                                manageplot(line, False)
                         case "#newjob":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                job_naming = args[0].lower()
-                                wage = float(args[1])
-                                if job_naming not in available_jobs_data and wage >= 0:
-                                    available_jobs_data[job_naming] = wage
-                                    print(f"Added new job '{job_naming}' with {wage} magmas wage.")
-                                    mcprint(f"Added '{job_naming}' job with {wage} wage.")
-                                elif wage < 0:
-                                    mcprint("Wrong value. wage < 0")
-                                else:
-                                    mcprint(f"Job '{job_naming}' already exist.")
-                            else:
-                                mcprint("No permissions.")
+                            newjobcommand(line)
                         case "#setjob":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToSet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                job_naming = args[1].lower()
-                                if job_naming in available_jobs_data:
-                                    if nameToSet not in players_jobs_data:
-                                        mcprint(f"{nameToSet} hasn't registered yet.")
-                                    else:
-                                        players_jobs_data[nameToSet] = job_naming
-                                        mcprint(f"Job '{job_naming}' set for {nameToSet}")
-                                        print(f"Job '{job_naming}' set for {nameToSet}")
-                                else:
-                                    mcprint("This job doesn't exist.")
-                            else:
-                                mcprint("No permissions.")
+                            setjobcommand(line)
                         case "#resetjob":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                args = line.replace("\n", "").split(f"{command} ", 1)[1].split()
-                                nameToReset = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                                if nameToReset not in players_jobs_data:
-                                    mcprint(f"{nameToReset} hasn't registered yet.")
-                                elif players_jobs_data[nameToReset] == "":
-                                    mcprint(f"{nameToReset} doesn't have a job.")
-                                else:
-                                    players_jobs_data[nameToReset] = ""
-                                    mcprint(f"Job reset for {nameToReset}.")
-                                    print(f"Job reset for {nameToReset}.")
-
-                            else:
-                                mcprint("No permissions.")
+                            resetjobcommand(line)
                         case "#getjob":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            args = line.replace("\n", "").split(f"{command}", 1)[1].split()
-                            nameToGet = mojang_api.get_username(mojang_api.get_uuid(args[0]))
-                            if nameToGet not in players_jobs_data:
-                                mcprint(f"{nameToGet} hasn't registered yet.")
-                            elif players_jobs_data[nameToGet] == "":
-                                mcprint(f"{nameToGet} doesn't have a job.")
-                            else:
-                                mcprint(f"{nameToGet}'s job is '{players_jobs_data[nameToGet]}'.")
-
+                            getjobcommand(line)
                         case "#myjob":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username not in players_jobs_data:
-                                mcprint("You haven't registered yet.")
-                            elif players_jobs_data[username] == "":
-                                mcprint("You don't have job.")
-                            else:
-                                mcprint(f"Your job is '{players_jobs_data[username]}'.")
+                            myjobcommand(line)
                         case "#payall":
-                            print(line)
-                            command = line.split()[5]
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins:
-                                for player in players_jobs_data:
-                                    player_job = players_jobs_data[player]
-                                    if player_job == "":
-                                        pass
-                                    else:
-                                        money_data[player] += available_jobs_data[player_job]
-                                        print(f"Salary paid to {player}.")
-                                mcprint("Salary was successfully paid to all players.")
-                                print("Salary was successfully paid to all players.")
-                            else:
-                                mcprint("No permissions.")
+                            payallcommand(line)
                         case "#github":
                             print(line)
                             mcprint("github.com/blurry16/ <3")
-
-                        case "#save":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username in admins or username == cfg["host"]:
-                                with (open("money.json", "w", encoding="utf-8") as money,
-                                      open("names.json", "w", encoding="utf-8") as names,
-                                      open("players_jobs.json", "w", encoding="utf-8") as players_jobs,
-                                      open("available_jobs.json", "w", encoding="utf-8") as available_jobs):
-                                    json.dump(money_data, money, indent=4)
-                                    print("Saved money_data.")
-                                    json.dump(names_data, names, indent=4)
-                                    print("Saved names_data.")
-                                    json.dump(players_jobs_data, players_jobs, indent=4)
-                                    print("Saved players_jobs_data.")
-                                    json.dump(available_jobs_data, available_jobs, indent=4)
-                                    print("Saved available_jobs_data.")
-                                mcprint("Successfully saved data in files.")
-                            else:
-                                mcprint("No permissions.")
-                        case "#stop":
-                            print(line)
-                            username = line.split()[4].split("<")[1].split(">")[0]
-                            if username == cfg["host"]:
-                                with (open("money.json", "w", encoding="utf-8") as money,
-                                      open("names.json", "w", encoding="utf-8") as names,
-                                      open("players_jobs.json", "w", encoding="utf-8") as players_jobs,
-                                      open("available_jobs.json", "w", encoding="utf-8") as available_jobs):
-                                    json.dump(money_data, money, indent=4)
-                                    print("Saved money_data.")
-                                    json.dump(names_data, names, indent=4)
-                                    print("Saved names_data.")
-                                    json.dump(players_jobs_data, players_jobs, indent=4)
-                                    print("Saved players_jobs_data.")
-                                    json.dump(available_jobs_data, available_jobs, indent=4)
-                                    print("Saved available_jobs_data.")
-                                mcprint("Stopped with code 0.")
-                                exit(0)
-                            else:
-                                print(f"{username} tried to stop the script.")
                 except ValueError:
                     mcprint("Wrong value.")
                 except errors.NotFound:
                     mcprint("This account doesn't exist.")
+                except errors.TooManyRequests:
+                    mcprint("Too many requests to Mojang. Please, try again later.")
+                    print(f"too many requests {time.time()}")
                 except IndexError:
                     mcprint("Not enough arguments.")
-                except Exception as ex:
-                    print(f"Error \"{ex}\" occurred.")
+                except Exception as e:
+                    print(f"Error \"{e}\" occurred.")
