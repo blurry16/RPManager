@@ -6,7 +6,7 @@
 - **keyboard library** _(pip install keyboard)_
 - **mojang library** _(pip install mojang)_
 
-## _Some useless answers on not given questions_
+## _Some useless answers on not asked questions_
 ### What is RPManager?
 
 RPManager is an updated version of AllergenStudios' one, who deleted the original one.  
