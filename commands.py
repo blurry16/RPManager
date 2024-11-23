@@ -103,26 +103,15 @@ def unregistercommand(line: str):
 def balancecommand(line: str):
     print(line)
     username = getusername(line)
-    uuid = getuuid(username)
-    data = datafile.load()
-
-    if uuid not in data:
-        mcprint("You haven't registered yet.")
-    else:
-        mcprint(f"Your balance is {data[uuid]['balance']}.")
-
-
-def getmoneycommand(line: str):
-    print(line)
     args = rpgetargs(line)
-    toget = args[1]
-    uuid = getuuid(toget)
+
+    uuid = getuuid(args[1] if len(args) > 1 else username)
     data = datafile.load()
 
     if uuid not in data:
-        mcprint(f"{toget} hasn't registered yet.")
-    else:
-        mcprint(f"{toget} has {data[uuid]['balance']}.")
+        return mcprint("You haven't registered yet." if len(args) <= 1 else f"{args[1]} is not registered.")
+
+    mcprint(("Your" if len(args) <= 1 else args[1] + "'s") + f" balance is {data[uuid]['balance']}.")
 
 
 def paycommand(line: str):
@@ -130,7 +119,7 @@ def paycommand(line: str):
     username = getusername(line)
     args = rpgetargs(line)
     authoruuid = getuuid(username)
-    topayuuid = getuuid(mojang_api.get_username(args[1]))
+    topayuuid = getuuid(args[1])
     data = datafile.load()
     if authoruuid == topayuuid:
         mcprint("You can't pay yourself : )")
@@ -150,7 +139,7 @@ def paycommand(line: str):
         data[topayuuid]["balance"] += amount
 
         datafile.dump(data)
-        mcprint(f"{username} successfully paid {topayuuid['username']} {str(amount)}.")
+        mcprint(f"{username} successfully paid {data[topayuuid]['username']} {str(amount)}.")
     elif amount < 1:
         mcprint("Wrong amount. amount < 1!")
     else:
@@ -321,6 +310,7 @@ def newjobcommand(line: str):
     else:
         mcprint(f"Job '{job_naming}' already exist.")
 
+
 def deletejobcommand(line: str):
     print(line)
     username = getusername(line)
@@ -338,6 +328,7 @@ def deletejobcommand(line: str):
         if data[uuid]["job"] == job_naming:
             data[uuid]["job"] = None
     datafile.dump(data)
+
 
 def setjobcommand(line: str):
     print(line)
