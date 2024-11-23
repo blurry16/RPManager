@@ -1,9 +1,10 @@
 {
-  "admins": ["blurry16"],
+  "admins": [],
   "region-name": "",
-  "log-file": "C:\\MultiMC\\instances\\1.21.1\\.minecraft\\logs\\latest.log",
+  "log-file": "",
   "host": "",
   "paths": {
+    "config": "config.json",
     "data": "data/data.json",
     "uuids": "data/uuids.json",
     "available_jobs": "data/available_jobs.json"

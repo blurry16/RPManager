@@ -1,4 +1,4 @@
-# rpmanager2
+# RPManager
 
 ## Requirements
 
@@ -7,24 +7,17 @@
 - **mojang library** _(pip install mojang)_
 
 ## _Some useless answers on not given questions_
-### What is rpmanager2?
+### What is RPManager?
 
-rpmanager2 is an updated version of rp-manager by AllergenStudios, who deleted the original one.
+RPManager is an updated version of AllergenStudios' one, who deleted the original one.  
+After the last review, there's nothing left from Allergen's version except for general idea.
 
-### What can rpmanager2 do?
+### What can RPManager do?
  
-**rpmanager2 can**:
+**RPManager can**:
 
 - **_manage roleplay money_**
 - **_manage roleplay names_**
 - **_manage region members without its owner needing_**
 - **_manage players' roleplay jobs_**
 - **_pay players' roleplay salary_**
-
-### How to save players' data?
-
-The host or an admin from the cfg.json admins list has to write "#save" in chat in order to save players' data.
-
-### How to stop & save players' data?
-
-The host has to write "#stop" in chat to stop & save players' data.
