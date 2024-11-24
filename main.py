@@ -38,8 +38,6 @@ if __name__ == "__main__":
                             unregistercommand(line)
                         case "#balance":
                             balancecommand(line)
-                        case "#getmoney":
-                            getmoneycommand(line)
                         case "#pay":
                             paycommand(line)
                         case "#setname":
@@ -48,8 +46,6 @@ if __name__ == "__main__":
                             getnamecommand(line)
                         case "#resetname":
                             resetnamecommand(line)
-                        case "#myname":
-                            mynamecommand(line)
                         case "#addmoney":
                             addmoneycommand(line)
                         case "#removemoney":

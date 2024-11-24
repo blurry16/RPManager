@@ -65,6 +65,7 @@ def getuuid(username: str) -> str:
 
 
 def registercommand(line: str):
+    """#register"""
     print(line)
     username = getusername(line)
     uuid = getuuid(username)
@@ -84,6 +85,7 @@ def registercommand(line: str):
 
 
 def unregistercommand(line: str):
+    """admin only: #unregister <username>"""
     print(line)
     username = getusername(line)
     if username not in admins:
@@ -101,6 +103,7 @@ def unregistercommand(line: str):
 
 
 def balancecommand(line: str):
+    """#balance - | <username>"""
     print(line)
     username = getusername(line)
     args = rpgetargs(line)
@@ -115,6 +118,7 @@ def balancecommand(line: str):
 
 
 def paycommand(line: str):
+    """#pay <username> <amount>"""
     print(line)
     username = getusername(line)
     args = rpgetargs(line)
@@ -147,6 +151,7 @@ def paycommand(line: str):
 
 
 def setnamecommand(line: str):
+    """#setname <argument>"""
     print(line)
     username = getusername(line)
     uuid = getuuid(username)
@@ -161,23 +166,25 @@ def setnamecommand(line: str):
 
 
 def getnamecommand(line: str):
+    """#getname <username>"""
     print(line)
 
     args = rpgetargs(line)
-    name = args[1]
+    name = getusername(line) if len(args) <= 1 else args[1]
     toget = getuuid(name)
 
     data = datafile.load()
 
     if toget not in data:
-        return mcprint(f"{args[1]} has not registered yet.")
+        return mcprint(f"{args[1]} has" if len(args) > 1 else "You have" + f" not registered yet.")
     if data[toget]["in-bot-name"] is None:
-        return mcprint(f"{name} hasn't set their name yet.")
+        return mcprint(f"{name} hasn't set their name yet." if len(args) > 1 else "You haven't set your name yet.")
 
-    mcprint(f"{name}'s Roleplay name is '{data[toget]['in-bot-name']}'.")
+    mcprint((f"{name}'s" if len(args) > 1 else "Your") +  f" roleplay name is '{data[toget]['in-bot-name']}'.")
 
 
 def resetnamecommand(line: str):
+    """#resetname"""
     print(line)
     username = getusername(line)
     uuid = getuuid(username)
@@ -187,18 +194,6 @@ def resetnamecommand(line: str):
     data[uuid]["in-bot-name"] = None
     datafile.dump(data)
     mcprint(f"Successfully reset Roleplay name for {username}.")
-
-
-def mynamecommand(line: str):
-    print(line)
-    uuid = getuuid(getusername(line))
-    data = datafile.load()
-    if uuid not in data:
-        return mcprint("You haven't registered yet.")
-    if data[uuid]["in-bot-name"] is not None:
-        return mcprint(f"Your Roleplay name is '{data[uuid]['in-bot-name']}'.")
-
-    mcprint(f"You haven't set your Roleplay name yet.")
 
 
 def addmoneycommand(line: str):
