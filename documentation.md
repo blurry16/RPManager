@@ -21,7 +21,7 @@ Simply prints your or somebody's bank balance.
 ### _pay_
 
 Syntax: `#pay <username> <amount>`  
-!!! amount >= 1.0 !!!
+**amount >= 1**
 
 Subtracts passed amount of money from executor's balance and adds passed amount to passed username's balance.  
 Tbh it's pretty self-explanatory.
