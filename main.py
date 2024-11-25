@@ -8,7 +8,7 @@ from mojang import errors
 
 from commands import *
 
-logo = """ ___ .-.       .-..    ___ .-. .-.     .---.   ___ .-.     .---.    .--.     .--.    ___ .-.    
+logo = r""" ___ .-.       .-..    ___ .-. .-.     .---.   ___ .-.     .---.    .--.     .--.    ___ .-.    
 (   )   \     /    \  (   )   '   \   / .-, \ (   )   \   / .-, \  /    \   /    \  (   )   \   
  | ' .-. ;   ' .-,  ;  |  .-.  .-. ; (__) ; |  |  .-. .  (__) ; | ;  ,-. ' |  .-. ;  | ' .-. ;  
  |  / (___)  | |  . |  | |  | |  | |   .'`  |  | |  | |    .'`  | | |  | | |  | | |  |  / (___) 
@@ -90,4 +90,5 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(f"Error \"{e}\" occurred.")
                     if "--debug" in argv:
+                        print("[RPManager]: debugging!")
                         raise
