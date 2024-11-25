@@ -26,7 +26,7 @@ def follow(file: TextIO) -> Generator[str, None, None]:
         yield li
 
 
-getusername = lambda line: line.split()[4].split("<")[1][:-1]
+getusername = lambda line: line.split()[4 if line.split()[4] != "(unseen)" else 5].split("<")[1][:-1]
 rpgetargs = lambda line: line.split("<" + getusername(line) + ">")[1].split()
 
 
