@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TextIO, Generator
 
 import keyboard
+import mojang.errors
 from mojang import API
 
 
@@ -180,7 +181,7 @@ def getnamecommand(line: str):
     if data[toget]["in-bot-name"] is None:
         return mcprint(f"{name} hasn't set their name yet." if len(args) > 1 else "You haven't set your name yet.")
 
-    mcprint((f"{name}'s" if len(args) > 1 else "Your") +  f" roleplay name is '{data[toget]['in-bot-name']}'.")
+    mcprint((f"{name}'s" if len(args) > 1 else "Your") + f" roleplay name is '{data[toget]['in-bot-name']}'.")
 
 
 def resetnamecommand(line: str):
@@ -408,3 +409,29 @@ def payallcommand(line: str):
     datafile.dump(data)
     mcprint("Salary was successfully paid to all players.")
     print("Salary was successfully paid to all players.")
+
+
+def paywagecommand(line: str):
+    print(line)
+    username = getusername(line)
+    if username not in admins:
+        return mcprint("No permissions.")
+
+    args = rpgetargs(line)
+    data = datafile.load()
+    available_jobs_data = availablejobsfile.load()
+    for i in args[1:]:
+        try:
+            uuid = getuuid(i)
+            if data[uuid]["job"] is not None:
+                data[uuid]["balance"] += available_jobs_data[data[uuid]["job"]]
+                print("Paid wage to " + data[uuid]["username"] + ".")
+            else:
+                print("Player doesn't have job -> " + i)
+        except mojang.errors.NotFound:
+            print("Player doesn't exist -> " + i)
+        except KeyError:
+            print("Player hasn't registered -> " + i)
+    datafile.dump(data)
+    print("Wage was paid to " + ", ".join(args[1:]) + ".")
+    mcprint("Wage was paid to passed players.")

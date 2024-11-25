@@ -72,6 +72,8 @@ if __name__ == "__main__":
                             myjobcommand(line)
                         case "#payall":
                             payallcommand(line)
+                        case "#paywage":
+                            paywagecommand(line)
                         case "#github":
                             print(line)
                             mcprint("github.com/blurry16/ <3")
