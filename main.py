@@ -28,7 +28,7 @@ if __name__ == "__main__":
         logfile = open(paths["log"], "r", encoding="utf-8")
         logLines = follow(logfile)
         for line in logLines:
-            if "[CHAT]" in line and "<" in line and ">" in line:
+            if "[CHAT]" in line and "<" in line and ">" in line and len(rpgetargs(line.strip())) > 0:
                 line = line.strip()
                 try:
                     match rpgetargs(line)[0]:
