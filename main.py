@@ -54,12 +54,6 @@ if __name__ == "__main__":
                             setmoneycommand(line)
                         case "#resetmoney":
                             resetmoneycommand(line)
-                        case "#addmember":
-                            if region_name != "" and region_name is not None:
-                                manageplot(line, True)
-                        case "#removemember":
-                            if region_name != "" and region_name is not None:
-                                manageplot(line, False)
                         case "#newjob":
                             newjobcommand(line)
                         case "#setjob":
@@ -72,9 +66,15 @@ if __name__ == "__main__":
                             payallcommand(line)
                         case "#paywage":
                             paywagecommand(line)
+                        case "#addmember":
+                            if region_name != "" and region_name is not None:
+                                manageplot(line, True)
+                        case "#removemember":
+                            if region_name != "" and region_name is not None:
+                                manageplot(line, False)
                         case "#github":
                             print(line)
-                            mcprint("github.com/blurry16/ <3")
+                            mcprint("https://github.com/blurry16/RPManager")
                 except ValueError:
                     mcprint("Wrong value.")
                 except errors.NotFound:
