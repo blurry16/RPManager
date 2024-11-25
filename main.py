@@ -2,6 +2,7 @@
 # nobody cares though, I'm the author of that fork.
 # anyways im so dumb so i rewrote whole this thing lol. but! it should be stable rn :3
 
+from sys import argv
 
 from mojang import errors
 
@@ -23,6 +24,8 @@ Welcome back!
 
 if __name__ == "__main__":
     print(logo)
+
+    argv = [i.lower() for i in argv]
 
     while True:
         logfile = open(paths["log"], "r", encoding="utf-8")
@@ -86,3 +89,5 @@ if __name__ == "__main__":
                     mcprint("Not enough arguments.")
                 except Exception as e:
                     print(f"Error \"{e}\" occurred.")
+                    if "--debug" in argv:
+                        raise
