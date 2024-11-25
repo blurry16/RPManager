@@ -372,26 +372,14 @@ def resetjobcommand(line: str):
 def getjobcommand(line: str):
     print(line)
     args = rpgetargs(line)
-    togetname = args[1]
+    togetname = getusername(line) if len(args) <= 1 else args[1]
     toget = getuuid(togetname)
     data = datafile.load()
     if toget not in data:
-        return mcprint(f"{togetname} hasn't registered yet.")
+        return mcprint(f"{togetname} hasn't registered yet." if len(args) > 1 else "You haven't registered yet.")
     if data[toget]["job"] is None:
-        return mcprint(f"{togetname} doesn't have a job.")
-    mcprint(f"{togetname}'s job is '{data[toget]['job']}'.")
-
-
-def myjobcommand(line: str):
-    print(line)
-    username = getusername(line)
-    uuid = getuuid(username)
-    data = datafile.load()
-    if uuid not in data:
-        return mcprint("You haven't registered yet.")
-    if data[uuid]["job"] is None:
-        return mcprint("You don't have job.")
-    mcprint(f"Your job is '{data[uuid]['job']}'.")
+        return mcprint(f"{togetname} doesn't have a job." if len(args) > 1 else "You don't have a job.")
+    mcprint(f"{togetname}'s job is '{data[toget]['job']}'." if len(args) > 1 else f"Your job is '{data[toget]['job']}'")
 
 
 def payallcommand(line: str):

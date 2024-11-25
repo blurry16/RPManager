@@ -55,10 +55,10 @@ if __name__ == "__main__":
                         case "#resetmoney":
                             resetmoneycommand(line)
                         case "#addmember":
-                            if region_name != "":
+                            if region_name != "" and region_name is not None:
                                 manageplot(line, True)
                         case "#removemember":
-                            if region_name != "":
+                            if region_name != "" and region_name is not None:
                                 manageplot(line, False)
                         case "#newjob":
                             newjobcommand(line)
@@ -68,8 +68,6 @@ if __name__ == "__main__":
                             resetjobcommand(line)
                         case "#getjob":
                             getjobcommand(line)
-                        case "#myjob":
-                            myjobcommand(line)
                         case "#payall":
                             payallcommand(line)
                         case "#paywage":
