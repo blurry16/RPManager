@@ -420,11 +420,13 @@ def paywagecommand(line: str):
     args = rpgetargs(line)
     data = datafile.load()
     available_jobs_data = availablejobsfile.load()
+    paid = []
     for i in args[1:]:
         try:
             uuid = getuuid(i)
             if data[uuid]["job"] is not None:
                 data[uuid]["balance"] += available_jobs_data[data[uuid]["job"]]
+                paid.append(data[uuid]["username"])
                 print("Paid wage to " + data[uuid]["username"] + ".")
             else:
                 print("Player doesn't have job -> " + i)
@@ -433,5 +435,5 @@ def paywagecommand(line: str):
         except KeyError:
             print("Player hasn't registered -> " + i)
     datafile.dump(data)
-    print("Wage was paid to " + ", ".join(args[1:]) + ".")
+    print("Wage was paid to " + ", ".join(paid) + ".")
     mcprint("Wage was paid to passed players.")
