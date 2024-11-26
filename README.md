@@ -1,9 +1,9 @@
-# RPManager
+# RPManager (pynput)
 
 ## Requirements
 
 - **python 3**
-- **keyboard library** _(pip install keyboard)_
+- **pynput library** _(pip install pynput)_
 - **mojang library** _(pip install mojang)_
 
 ## _Some useless answers on not asked questions_

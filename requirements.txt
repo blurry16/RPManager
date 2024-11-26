@@ -1,2 +1,2 @@
-keyboard~=0.13.5
 mojang~=1.1.0
+pynput~=1.7.7
