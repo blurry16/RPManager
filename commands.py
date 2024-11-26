@@ -3,17 +3,21 @@ import time
 from pathlib import Path
 from typing import TextIO, Generator
 
-import keyboard
 import mojang.errors
 from mojang import API
+from pynput.keyboard import Key, Controller
+
+keyboard = Controller()
 
 
 def mcprint(text):
-    keyboard.press_and_release("t")
+    keyboard.press("t")
     time.sleep(0.1)
-    keyboard.write(text, delay=0)
+    keyboard.release("t")
+    keyboard.type(text)
+    keyboard.press(Key.enter)
     time.sleep(0.01)
-    keyboard.press_and_release("enter")
+    keyboard.release(Key.enter)
 
 
 def follow(file: TextIO) -> Generator[str, None, None]:
