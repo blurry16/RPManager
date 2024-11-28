@@ -34,7 +34,7 @@ if __name__ == "__main__":
             if "[CHAT]" in line and "<" in line and ">" in line and len(rpgetargs(line.strip())) > 0:
                 line = line.strip()
                 try:
-                    match rpgetargs(line)[0]:
+                    match rpgetargs(line)[0].lower():
                         case "#register":
                             registercommand(line)
                         case "#unregister":
