@@ -1,5 +1,7 @@
 # RPManager
 
+**Check out [the mineflayer edition of RPManager!](https://github.com/blurry16/RPManager-mineflayer)** 
+
 ## Requirements
 
 - **python 3**
