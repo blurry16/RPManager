@@ -52,16 +52,15 @@ paths = config["paths"]
 admins = config["admins"]
 region_name = config["region-name"]
 
+uuids = {}
 datafile = Json(paths["data"])
-uuidsfile = Json(paths["uuids"])
 availablejobsfile = Json(paths["available_jobs"])
 
 
 def getuuid(username: str) -> str:
-    uuids = uuidsfile.load()
+
     if username.lower() not in uuids:
         uuids[username.lower()] = mojang_api.get_uuid(username)
-        uuidsfile.dump(uuids)
     return uuids[username.lower()]
 
 

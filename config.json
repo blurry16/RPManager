@@ -6,7 +6,6 @@
     "log": "",
     "config": "config.json",
     "data": "data/data.json",
-    "uuids": "data/uuids.json",
     "available_jobs": "data/available_jobs.json"
   },
   "region-name": ""
